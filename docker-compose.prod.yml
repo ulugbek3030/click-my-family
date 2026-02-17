@@ -1,0 +1,408 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # Infrastructure
+  # ==========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: mf-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-my_family}
+      POSTGRES_USER: ${DB_USERNAME:-my_family_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/create-schemas.sql:/docker-entrypoint-initdb.d/01-schemas.sql
+      - ./scripts/seed-levels.sql:/docker-entrypoint-initdb.d/02-seed-levels.sql
+      - ./scripts/seed-holidays.sql:/docker-entrypoint-initdb.d/03-seed-holidays.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME:-my_family_user} -d ${DB_DATABASE:-my_family}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    container_name: mf-redis
+    restart: always
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru --save 60 1000
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: mf-rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-my_family_user}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+  # ==========================================
+  # Microservices
+  # ==========================================
+  api-gateway:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.base
+      args:
+        APP_NAME: api-gateway
+    container_name: mf-api-gateway
+    restart: always
+    ports:
+      - '3000:3000'
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-my_family_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE:-my_family}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-my_family_user}:${RABBITMQ_PASS}@rabbitmq:5672
+      FAMILY_GRAPH_HOST: family-graph-service
+      FAMILY_GRAPH_PORT: 50051
+      PRIVACY_HOST: privacy-service
+      PRIVACY_PORT: 50052
+      GAMIFICATION_HOST: gamification-service
+      GAMIFICATION_PORT: 50053
+      TRANSFER_HOST: transfer-service
+      TRANSFER_PORT: 50054
+      NOTIFICATION_HOST: notification-service
+      NOTIFICATION_PORT: 50055
+      CARDS_HOST: cards-service
+      CARDS_PORT: 50056
+      CLICK_JWT_PUBLIC_KEY: ${CLICK_JWT_PUBLIC_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+  family-graph-service:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.base
+      args:
+        APP_NAME: family-graph-service
+    container_name: mf-family-graph
+    restart: always
+    environment:
+      PORT: 50051
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-my_family_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE:-my_family}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-my_family_user}:${RABBITMQ_PASS}@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  privacy-service:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.base
+      args:
+        APP_NAME: privacy-service
+    container_name: mf-privacy
+    restart: always
+    environment:
+      PORT: 50052
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-my_family_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE:-my_family}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-my_family_user}:${RABBITMQ_PASS}@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  gamification-service:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.base
+      args:
+        APP_NAME: gamification-service
+    container_name: mf-gamification
+    restart: always
+    environment:
+      PORT: 50053
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-my_family_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE:-my_family}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-my_family_user}:${RABBITMQ_PASS}@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  transfer-service:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.base
+      args:
+        APP_NAME: transfer-service
+    container_name: mf-transfer
+    restart: always
+    environment:
+      PORT: 50054
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-my_family_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE:-my_family}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-my_family_user}:${RABBITMQ_PASS}@rabbitmq:5672
+      CLICK_CORE_BASE_URL: ${CLICK_CORE_BASE_URL}
+      CLICK_CORE_API_KEY: ${CLICK_CORE_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.base
+      args:
+        APP_NAME: notification-service
+    container_name: mf-notification
+    restart: always
+    environment:
+      PORT: 50055
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-my_family_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE:-my_family}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-my_family_user}:${RABBITMQ_PASS}@rabbitmq:5672
+      CLICK_CORE_BASE_URL: ${CLICK_CORE_BASE_URL}
+      CLICK_CORE_API_KEY: ${CLICK_CORE_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  cards-service:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.base
+      args:
+        APP_NAME: cards-service
+    container_name: mf-cards
+    restart: always
+    environment:
+      PORT: 50056
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-my_family_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE:-my_family}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-my_family_user}:${RABBITMQ_PASS}@rabbitmq:5672
+      CLICK_CORE_BASE_URL: ${CLICK_CORE_BASE_URL}
+      CLICK_CORE_API_KEY: ${CLICK_CORE_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  admin-service:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.base
+      args:
+        APP_NAME: admin-service
+    container_name: mf-admin
+    restart: always
+    ports:
+      - '3001:3001'
+    environment:
+      PORT: 3001
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-my_family_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE:-my_family}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-my_family_user}:${RABBITMQ_PASS}@rabbitmq:5672
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET}
+      ADMIN_JWT_EXPIRES_IN: ${ADMIN_JWT_EXPIRES_IN:-8h}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  # ==========================================
+  # Nginx Reverse Proxy
+  # ==========================================
+  nginx:
+    image: nginx:alpine
+    container_name: mf-nginx
+    restart: always
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deploy/nginx/conf.d:/etc/nginx/conf.d:ro
+      - certbot_etc:/etc/letsencrypt:ro
+      - certbot_var:/var/lib/letsencrypt
+      - webroot:/var/www/certbot
+    depends_on:
+      - api-gateway
+      - admin-service
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+  # SSL Certificate auto-renewal
+  certbot:
+    image: certbot/certbot
+    container_name: mf-certbot
+    volumes:
+      - certbot_etc:/etc/letsencrypt
+      - certbot_var:/var/lib/letsencrypt
+      - webroot:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  certbot_etc:
+  certbot_var:
+  webroot:
+
+networks:
+  backend:
+    driver: bridge
