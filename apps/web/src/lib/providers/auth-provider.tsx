@@ -15,12 +15,30 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
 });
 
+function generateDevToken(): string {
+  const header = btoa(JSON.stringify({ typ: 'JWT', alg: 'RS256' }))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const now = Math.floor(Date.now() / 1000);
+  const payload = btoa(JSON.stringify({
+    sub: '+998901234567',
+    iat: now,
+    exp: now + 365 * 24 * 60 * 60,
+    roles: ['user'],
+  })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return `${header}.${payload}.dev_signature`;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setTokenState] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = getAuthToken();
-    if (stored) setTokenState(stored);
+    let stored = getAuthToken();
+    if (!stored) {
+      // Auto-generate dev token for development
+      stored = generateDevToken();
+      setAuthToken(stored);
+    }
+    setTokenState(stored);
   }, []);
 
   const handleSetToken = (newToken: string | null) => {
