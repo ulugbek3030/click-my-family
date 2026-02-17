@@ -47,4 +47,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 USER node
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD sh -c "node dist/apps/${APP_NAME}/src/main.js"
+CMD sh -c "node dist/apps/${APP_NAME}/apps/${APP_NAME}/src/main.js"
