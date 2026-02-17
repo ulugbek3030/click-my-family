@@ -358,6 +358,29 @@ services:
           memory: 192M
 
   # ==========================================
+  # Web Frontend (Next.js)
+  # ==========================================
+  web:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.web
+    container_name: mf-web
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 4200
+      HOSTNAME: '0.0.0.0'
+      API_GATEWAY_URL: http://api-gateway:3000
+    depends_on:
+      - api-gateway
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ==========================================
   # Nginx Reverse Proxy
   # ==========================================
   nginx:
@@ -376,6 +399,7 @@ services:
     depends_on:
       - api-gateway
       - admin-service
+      - web
     networks:
       - backend
     deploy:

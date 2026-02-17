@@ -36,7 +36,10 @@
     "infra:down": "docker-compose down",
     "test": "jest",
     "lint": "prettier --check \"apps/**/*.ts\" \"libs/**/*.ts\"",
-    "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\""
+    "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
+    "dev:web": "cd apps/web && npx next dev --port 4200",
+    "build:web": "cd apps/web && npx next build",
+    "start:web": "cd apps/web && npx next start --port 4200"
   },
   "private": true,
   "dependencies": {
@@ -59,7 +62,21 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "typeorm": "^0.3.28",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@tanstack/react-query": "^5.62.0",
+    "react-hook-form": "^7.54.0",
+    "@hookform/resolvers": "^3.9.0",
+    "zod": "^3.24.0",
+    "d3-hierarchy": "^3.1.2",
+    "d3-zoom": "^3.0.0",
+    "d3-selection": "^3.0.0",
+    "lucide-react": "^0.468.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.16",
@@ -84,7 +101,14 @@
     "tslib": "^2.3.0",
     "tsc-alias": "^1.8.13",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "tailwindcss": "^4.0.0",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/d3-hierarchy": "^3.1.7",
+    "@types/d3-zoom": "^3.0.8",
+    "@types/d3-selection": "^3.0.11"
   },
   "workspaces": [
     "packages/*"
