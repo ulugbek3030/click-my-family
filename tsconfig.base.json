@@ -1,21 +1,35 @@
 {
   "compilerOptions": {
-    "composite": true,
-    "declarationMap": true,
-    "emitDeclarationOnly": true,
-    "importHelpers": true,
-    "isolatedModules": true,
-    "lib": ["es2022"],
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "noEmitOnError": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2022",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "incremental": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "es2022",
-    "customConditions": ["@org/source"]
-  }
+    "strictPropertyInitialization": false,
+    "noImplicitAny": true,
+    "strictBindCallApply": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "@my-family/shared-dto": ["libs/shared-dto/src/index.ts"],
+      "@my-family/shared-interfaces": ["libs/shared-interfaces/src/index.ts"],
+      "@my-family/database": ["libs/database/src/index.ts"],
+      "@my-family/messaging": ["libs/messaging/src/index.ts"],
+      "@my-family/caching": ["libs/caching/src/index.ts"],
+      "@my-family/audit": ["libs/audit/src/index.ts"],
+      "@my-family/click-core-client": ["libs/click-core-client/src/index.ts"],
+      "@my-family/common": ["libs/common/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
 }

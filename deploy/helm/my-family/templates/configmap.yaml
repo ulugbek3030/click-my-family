@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "my-family.fullname" . }}-config
+  labels:
+    {{- include "my-family.labels" . | nindent 4 }}
+data:
+  NODE_ENV: {{ .Values.global.environment | quote }}
+  DB_HOST: {{ .Values.postgresql.host | quote }}
+  DB_PORT: {{ .Values.postgresql.port | quote }}
+  DB_NAME: {{ .Values.postgresql.database | quote }}
+  DB_USERNAME: {{ .Values.postgresql.username | quote }}
+  REDIS_HOST: {{ .Values.redis.host | quote }}
+  REDIS_PORT: {{ .Values.redis.port | quote }}
+  RABBITMQ_HOST: {{ .Values.rabbitmq.host | quote }}
+  RABBITMQ_PORT: {{ .Values.rabbitmq.port | quote }}
+  RABBITMQ_USERNAME: {{ .Values.rabbitmq.username | quote }}
+  API_GATEWAY_PORT: {{ .Values.services.apiGateway.port | quote }}
+  FAMILY_GRAPH_GRPC_PORT: {{ .Values.services.familyGraph.port | quote }}
+  PRIVACY_GRPC_PORT: {{ .Values.services.privacy.port | quote }}
+  GAMIFICATION_GRPC_PORT: {{ .Values.services.gamification.port | quote }}
+  TRANSFER_GRPC_PORT: {{ .Values.services.transfer.port | quote }}
+  NOTIFICATION_GRPC_PORT: {{ .Values.services.notification.port | quote }}
+  CARDS_GRPC_PORT: {{ .Values.services.cards.port | quote }}
+  ADMIN_PORT: {{ .Values.services.admin.port | quote }}
+  FAMILY_GRAPH_HOST: {{ include "my-family.fullname" . }}-{{ .Values.services.familyGraph.name }}
+  PRIVACY_HOST: {{ include "my-family.fullname" . }}-{{ .Values.services.privacy.name }}
+  GAMIFICATION_HOST: {{ include "my-family.fullname" . }}-{{ .Values.services.gamification.name }}
+  TRANSFER_HOST: {{ include "my-family.fullname" . }}-{{ .Values.services.transfer.name }}
+  NOTIFICATION_HOST: {{ include "my-family.fullname" . }}-{{ .Values.services.notification.name }}
+  CARDS_HOST: {{ include "my-family.fullname" . }}-{{ .Values.services.cards.name }}

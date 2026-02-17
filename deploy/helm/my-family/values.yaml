@@ -1,0 +1,180 @@
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  environment: production
+
+# Services configuration
+services:
+  apiGateway:
+    name: api-gateway
+    replicas: 2
+    port: 3000
+    image:
+      repository: my-family/api-gateway
+      tag: latest
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilization: 70
+
+  familyGraph:
+    name: family-graph-service
+    replicas: 2
+    port: 50051
+    image:
+      repository: my-family/family-graph-service
+      tag: latest
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 8
+      targetCPUUtilization: 70
+
+  privacy:
+    name: privacy-service
+    replicas: 2
+    port: 50052
+    image:
+      repository: my-family/privacy-service
+      tag: latest
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
+
+  gamification:
+    name: gamification-service
+    replicas: 2
+    port: 50053
+    image:
+      repository: my-family/gamification-service
+      tag: latest
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
+
+  transfer:
+    name: transfer-service
+    replicas: 2
+    port: 50054
+    image:
+      repository: my-family/transfer-service
+      tag: latest
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
+
+  notification:
+    name: notification-service
+    replicas: 2
+    port: 50055
+    image:
+      repository: my-family/notification-service
+      tag: latest
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 6
+      targetCPUUtilization: 70
+
+  cards:
+    name: cards-service
+    replicas: 2
+    port: 50056
+    image:
+      repository: my-family/cards-service
+      tag: latest
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
+
+  admin:
+    name: admin-service
+    replicas: 1
+    port: 3001
+    image:
+      repository: my-family/admin-service
+      tag: latest
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
+
+# Infrastructure
+postgresql:
+  enabled: false  # Use external PostgreSQL in production
+  host: postgresql
+  port: 5432
+  database: my_family
+  username: my_family_user
+  existingSecret: my-family-db-secret
+
+redis:
+  enabled: false  # Use external Redis in production
+  host: redis
+  port: 6379
+
+rabbitmq:
+  enabled: false  # Use external RabbitMQ in production
+  host: rabbitmq
+  port: 5672
+  username: my_family_user
+  existingSecret: my-family-rabbitmq-secret
+
+# Ingress
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+  hosts:
+    - host: api.click.uz
+      paths:
+        - path: /v1/family
+          pathType: Prefix
+          service: api-gateway
+  tls:
+    - secretName: click-tls-secret
+      hosts:
+        - api.click.uz

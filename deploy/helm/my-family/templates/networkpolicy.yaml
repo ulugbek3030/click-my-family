@@ -1,0 +1,27 @@
+{{- $root := . -}}
+# Only api-gateway and admin-service accept external traffic.
+# Internal services only accept traffic from within the my-family namespace.
+{{- range $key, $svc := .Values.services }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "my-family.fullname" $root }}-{{ $svc.name }}
+  labels:
+    {{- include "my-family.labels" $root | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $svc.name }}
+      app.kubernetes.io/instance: {{ $root.Release.Name }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: my-family
+      ports:
+        - port: {{ $svc.port }}
+          protocol: TCP
+{{- end }}
