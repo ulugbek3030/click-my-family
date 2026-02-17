@@ -91,25 +91,27 @@ export function TreeNodeComponent({ node, x, y, isSelected, onClick, onAddRelati
           {birthLabel}
         </text>
       )}
-      {/* Add relation button — bottom center */}
+      {/* Add relation button — pill/tab shape at bottom center */}
       {onAddRelation && (
         <g
           onClick={(e) => { e.stopPropagation(); onAddRelation(node.id); }}
           className="cursor-pointer"
         >
-          <circle
-            cx={NODE_WIDTH / 2}
-            cy={NODE_HEIGHT - 2}
-            r={10}
-            className="fill-primary stroke-white"
-            strokeWidth={2}
-            style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.15))' }}
+          <rect
+            x={NODE_WIDTH / 2 - 18}
+            y={NODE_HEIGHT - 8}
+            width={36}
+            height={20}
+            rx={10}
+            ry={10}
+            className="fill-primary"
+            style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.15))' }}
           />
           <text
             x={NODE_WIDTH / 2}
-            y={NODE_HEIGHT + 3}
+            y={NODE_HEIGHT + 6}
             textAnchor="middle"
-            className="text-xs font-bold fill-white pointer-events-none"
+            className="text-sm font-bold fill-white pointer-events-none"
           >
             +
           </text>
