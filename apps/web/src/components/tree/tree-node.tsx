@@ -12,34 +12,48 @@ interface TreeNodeProps {
   onAddRelation?: (nodeId: string) => void;
 }
 
-const NODE_WIDTH = 160;
-const NODE_HEIGHT = 120;
+const NODE_WIDTH = 220;
+const NODE_HEIGHT = 80;
+
+function getBirthLabel(birthDate: string | null, isAlive: boolean): string {
+  if (!birthDate) return '';
+  try {
+    const year = new Date(birthDate).getFullYear();
+    if (isNaN(year)) return '';
+    return isAlive ? `р. ${year}` : `${year} — ...`;
+  } catch {
+    return '';
+  }
+}
 
 export function TreeNodeComponent({ node, x, y, isSelected, onClick, onAddRelation }: TreeNodeProps) {
   const initials = `${node.firstName[0]}${node.lastName?.[0] || ''}`.toUpperCase();
   const isMale = node.gender === 'male';
   const isFemale = node.gender === 'female';
+  const fullName = `${node.firstName} ${node.lastName || ''}`.trim();
+  const birthLabel = getBirthLabel(node.birthDate, node.isAlive);
 
   return (
     <g transform={`translate(${x}, ${y})`} className="cursor-pointer">
+      {/* Card background */}
       <rect
         width={NODE_WIDTH}
         height={NODE_HEIGHT}
-        rx={12}
-        ry={12}
+        rx={14}
+        ry={14}
         className={cn(
           'fill-white stroke-2 transition-colors',
           isSelected ? 'stroke-primary' : 'stroke-border',
           !node.isAlive && 'opacity-70'
         )}
-        style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.1))' }}
+        style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.08))' }}
         onClick={onClick}
       />
-      {/* Avatar circle */}
+      {/* Avatar circle — left side */}
       <circle
-        cx={NODE_WIDTH / 2}
-        cy={28}
-        r={18}
+        cx={36}
+        cy={32}
+        r={20}
         className={cn(
           isMale ? 'fill-blue-100 stroke-blue-300' : isFemale ? 'fill-pink-100 stroke-pink-300' : 'fill-gray-100 stroke-gray-300'
         )}
@@ -47,8 +61,8 @@ export function TreeNodeComponent({ node, x, y, isSelected, onClick, onAddRelati
         onClick={onClick}
       />
       <text
-        x={NODE_WIDTH / 2}
-        y={33}
+        x={36}
+        y={37}
         textAnchor="middle"
         className={cn(
           'text-xs font-bold pointer-events-none',
@@ -57,24 +71,27 @@ export function TreeNodeComponent({ node, x, y, isSelected, onClick, onAddRelati
       >
         {initials}
       </text>
-      {/* Name */}
+      {/* Name — right side */}
       <text
-        x={NODE_WIDTH / 2}
-        y={60}
-        textAnchor="middle"
-        className="text-xs font-medium fill-foreground pointer-events-none"
+        x={66}
+        y={birthLabel ? 28 : 35}
+        textAnchor="start"
+        className="text-xs font-semibold fill-foreground pointer-events-none"
       >
-        {node.firstName}
+        {fullName.length > 18 ? fullName.slice(0, 17) + '…' : fullName}
       </text>
-      <text
-        x={NODE_WIDTH / 2}
-        y={74}
-        textAnchor="middle"
-        className="text-[10px] fill-muted-foreground pointer-events-none"
-      >
-        {node.lastName || ''}
-      </text>
-      {/* Add relation button */}
+      {/* Birth date label */}
+      {birthLabel && (
+        <text
+          x={66}
+          y={44}
+          textAnchor="start"
+          className="text-[10px] fill-muted-foreground pointer-events-none"
+        >
+          {birthLabel}
+        </text>
+      )}
+      {/* Add relation button — bottom center */}
       {onAddRelation && (
         <g
           onClick={(e) => { e.stopPropagation(); onAddRelation(node.id); }}
@@ -82,28 +99,29 @@ export function TreeNodeComponent({ node, x, y, isSelected, onClick, onAddRelati
         >
           <circle
             cx={NODE_WIDTH / 2}
-            cy={NODE_HEIGHT - 10}
-            r={12}
+            cy={NODE_HEIGHT - 2}
+            r={10}
             className="fill-primary stroke-white"
             strokeWidth={2}
-            style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }}
+            style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.15))' }}
           />
           <text
             x={NODE_WIDTH / 2}
-            y={NODE_HEIGHT - 5}
+            y={NODE_HEIGHT + 3}
             textAnchor="middle"
-            className="text-sm font-bold fill-white pointer-events-none"
+            className="text-xs font-bold fill-white pointer-events-none"
           >
             +
           </text>
         </g>
       )}
-      {/* Status indicators */}
+      {/* Status: deceased */}
       {!node.isAlive && (
-        <text x={NODE_WIDTH - 15} y={18} className="text-[10px] fill-muted-foreground pointer-events-none">✝</text>
+        <text x={NODE_WIDTH - 16} y={16} className="text-[10px] fill-muted-foreground pointer-events-none">✝</text>
       )}
+      {/* Status: unconfirmed */}
       {!node.isConfirmed && (
-        <circle cx={15} cy={12} r={5} className="fill-yellow-400 stroke-yellow-600" strokeWidth={1} />
+        <circle cx={NODE_WIDTH - 12} cy={12} r={4} className="fill-yellow-400 stroke-yellow-600" strokeWidth={1} />
       )}
     </g>
   );
