@@ -18,8 +18,9 @@ COPY tsconfig.base.json ./
 COPY libs/ ./libs/
 COPY apps/ ./apps/
 
-# Build the specific app
-RUN npx tsc -p apps/${APP_NAME}/tsconfig.app.json
+# Build the specific app and resolve path aliases
+RUN npx tsc -p apps/${APP_NAME}/tsconfig.app.json && \
+    npx tsc-alias -p apps/${APP_NAME}/tsconfig.app.json
 
 ###############################################
 # Stage 2: Production
