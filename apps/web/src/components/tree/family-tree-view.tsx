@@ -1,18 +1,19 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { select } from 'd3-selection';
 import { zoom, zoomIdentity, type ZoomBehavior } from 'd3-zoom';
 import { useFamilyTree } from '@/lib/hooks/use-tree';
 import { layoutTree } from '@/lib/utils/tree-layout';
 import { TreeNodeComponent, NODE_WIDTH, NODE_HEIGHT } from './tree-node';
 import { TreeControls } from './tree-controls';
+import { AddRelationshipDialog } from './add-relationship-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/lib/providers/i18n-provider';
 import { TreePine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import type { PositionedLink } from '@/lib/types/tree';
+import type { PositionedLink, TreeNode } from '@/lib/types/tree';
 
 function LinkPath({ link }: { link: PositionedLink }) {
   if (link.type === 'couple') {
@@ -49,8 +50,26 @@ export function FamilyTreeView() {
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null);
   const zoomBehaviorRef = useRef<ZoomBehavior<SVGSVGElement, unknown>>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   const layout = tree ? layoutTree(tree) : null;
+
+  // Get all tree nodes as flat array for dialog
+  const allTreeNodes = useMemo<TreeNode[]>(() => {
+    if (!tree) return [];
+    return Object.values(tree.nodes);
+  }, [tree]);
+
+  const selectedNode = useMemo<TreeNode | null>(() => {
+    if (!selectedNodeId || !tree) return null;
+    return tree.nodes[selectedNodeId] || null;
+  }, [selectedNodeId, tree]);
+
+  const handleAddRelation = useCallback((nodeId: string) => {
+    setSelectedNodeId(nodeId);
+    setDialogOpen(true);
+  }, []);
 
   useEffect(() => {
     if (!svgRef.current || !gRef.current) return;
@@ -139,34 +158,43 @@ export function FamilyTreeView() {
   }
 
   return (
-    <div className="relative h-[calc(100vh-200px)] border rounded-lg bg-gray-50 overflow-hidden">
-      <svg
-        ref={svgRef}
-        className="w-full h-full"
-        style={{ cursor: 'grab' }}
-      >
-        <g ref={gRef}>
-          {/* Links */}
-          {layout.links.map((link, i) => (
-            <LinkPath key={i} link={link} />
-          ))}
-          {/* Nodes */}
-          {layout.nodes.map((pNode) => (
-            <TreeNodeComponent
-              key={pNode.id}
-              node={pNode.node}
-              x={pNode.x}
-              y={pNode.y}
-            />
-          ))}
-        </g>
-      </svg>
-      <TreeControls
-        onZoomIn={handleZoomIn}
-        onZoomOut={handleZoomOut}
-        onFitToScreen={handleFitToScreen}
-        onAddPerson={undefined}
+    <>
+      <div className="relative h-[calc(100vh-200px)] border rounded-lg bg-gray-50 overflow-hidden">
+        <svg
+          ref={svgRef}
+          className="w-full h-full"
+          style={{ cursor: 'grab' }}
+        >
+          <g ref={gRef}>
+            {/* Links */}
+            {layout.links.map((link, i) => (
+              <LinkPath key={i} link={link} />
+            ))}
+            {/* Nodes */}
+            {layout.nodes.map((pNode) => (
+              <TreeNodeComponent
+                key={pNode.id}
+                node={pNode.node}
+                x={pNode.x}
+                y={pNode.y}
+                onAddRelation={handleAddRelation}
+              />
+            ))}
+          </g>
+        </svg>
+        <TreeControls
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onFitToScreen={handleFitToScreen}
+          onAddPerson={undefined}
+        />
+      </div>
+      <AddRelationshipDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        sourceNode={selectedNode}
+        existingPersons={allTreeNodes}
       />
-    </div>
+    </>
   );
 }

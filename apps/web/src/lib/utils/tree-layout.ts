@@ -1,7 +1,7 @@
 import type { FamilyTree, TreeNode, PositionedNode, PositionedLink } from '../types/tree';
 
 const NODE_WIDTH = 160;
-const NODE_HEIGHT = 100;
+const NODE_HEIGHT = 120;
 const HORIZONTAL_GAP = 40;
 const VERTICAL_GAP = 80;
 const COUPLE_GAP = 20;
