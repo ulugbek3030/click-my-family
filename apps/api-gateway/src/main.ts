@@ -7,7 +7,18 @@ import { GlobalValidationPipe } from '@my-family/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'validator.swagger.io'],
+        },
+      },
+    }),
+  );
   app.enableCors();
   app.setGlobalPrefix('v1/family');
   app.useGlobalPipes(GlobalValidationPipe);
