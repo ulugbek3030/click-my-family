@@ -15,8 +15,10 @@ async function bootstrap() {
           scriptSrc: ["'self'", "'unsafe-inline'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", 'data:', 'validator.swagger.io'],
+          upgradeInsecureRequests: null,
         },
       },
+      strictTransportSecurity: false,
     }),
   );
   app.enableCors();
