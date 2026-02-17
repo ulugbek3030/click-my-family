@@ -2,13 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, TreePine, Users, Bell, Settings } from 'lucide-react';
+import { TreePine, Users, Bell, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useI18n } from '@/lib/providers/i18n-provider';
 
 const navItems = [
-  { href: '/', icon: Home, labelKey: 'dashboard' as const },
-  { href: '/tree', icon: TreePine, labelKey: 'tree' as const },
+  { href: '/', icon: TreePine, labelKey: 'tree' as const },
   { href: '/persons', icon: Users, labelKey: 'persons' as const },
   { href: '/notifications', icon: Bell, labelKey: 'notifications' as const },
   { href: '/settings', icon: Settings, labelKey: 'settings' as const },
