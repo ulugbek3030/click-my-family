@@ -22,7 +22,11 @@ export function Header() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setLocale(locale === 'uz' ? 'ru' : 'uz')}
+            onClick={() => {
+              const idx = LOCALES.findIndex((l) => l.value === locale);
+              const next = LOCALES[(idx + 1) % LOCALES.length];
+              setLocale(next.value);
+            }}
             className="gap-1 text-xs"
           >
             <Globe className="h-4 w-4" />

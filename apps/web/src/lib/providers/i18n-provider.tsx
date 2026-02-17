@@ -3,9 +3,11 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { uz } from '../i18n/uz';
 import { ru } from '../i18n/ru';
-import { type Locale, DEFAULT_LOCALE, type TranslationKeys } from '../i18n';
+import { uzCyrl } from '../i18n/uz-cyrl';
+import { type Locale, DEFAULT_LOCALE, LOCALES, type TranslationKeys } from '../i18n';
 
-const translations: Record<Locale, TranslationKeys> = { uz, ru };
+const translations: Record<Locale, TranslationKeys> = { uz, ru, 'uz-cyrl': uzCyrl };
+const validLocales = LOCALES.map((l) => l.value) as string[];
 
 interface I18nContextType {
   locale: Locale;
@@ -24,7 +26,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem('locale') as Locale | null;
-    if (stored && (stored === 'uz' || stored === 'ru')) {
+    if (stored && validLocales.includes(stored)) {
       setLocaleState(stored);
     }
   }, []);
